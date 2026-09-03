@@ -1,0 +1,64 @@
+# Project Configuration File - IEEE Tsunami Prediction Study Replication
+
+project:
+  name: "ai-tsunami-prediction"
+  version: "1.0.0"
+  random_seed: 42
+
+paths:
+  raw_data_dir: "data/raw"
+  processed_data_dir: "data/processed"
+  models_dir: "models/saved_models"
+  reports_dir: "reports"
+  figures_dir: "reports/figures"
+  raw_dataset_file: "data/raw/earthquake_data.csv"
+
+data:
+  min_magnitude: 6.0
+  start_year: 2015
+  end_year: 2025
+  features:
+    - "magnitude"
+    - "depth"
+    - "latitude"
+    - "longitude"
+  target: "tsunami"
+  test_size: 0.20
+  shuffle: true
+  stratify: true
+
+models:
+  logistic_regression:
+    solver: "lbfgs"
+    max_iter: 1000
+    C: 1.0
+
+  svm:
+    kernel: "rbf"
+    probability: true
+    C: 1.0
+    gamma: "scale"
+
+  random_forest:
+    n_estimators: 50
+    max_depth: 10
+    min_samples_split: 5
+    random_state: 42
+
+  grid_search_rf:
+    param_grid:
+      n_estimators: [30, 50, 100]
+      max_depth: [5, 10, 15, null]
+      min_samples_split: [2, 5, 10]
+    cv: 5
+    scoring: "f1"
+
+case_study:
+  # 29 September 2009 Samoa Earthquake (Mw 8.1)
+  name: "2009 Samoa Earthquake"
+  date: "2009-09-29"
+  magnitude: 8.1
+  depth: 18.0
+  latitude: -15.489
+  longitude: -172.095
+  actual_tsunami: 1
