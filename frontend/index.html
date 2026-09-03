@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Tsunami Early Warning System | IEEE ML Replication</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Leaflet CSS for Global Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="top-header">
+      <div class="header-left">
+        <div class="radar-pulse"></div>
+        <div>
+          <h1>AI-Driven Tsunami Early Warning System</h1>
+          <p class="subtitle">Multi-Model Classification (Random Forest • SVM • Logistic Regression) • IEEE JSTARS 2026</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <span class="badge status-live" id="systemStatusBadge"><span class="dot"></span> SYSTEM ONLINE</span>
+        <span class="badge dataset-tag">USGS 2015–2025 M≥6.0</span>
+      </div>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="dashboard-grid">
+      <!-- Left Column: Input Controls & Presets -->
+      <section class="card control-card">
+        <div class="card-header">
+          <h2>Seismic Event Parameters</h2>
+          <span class="card-tag">Real-Time Ingestion</span>
+        </div>
+
+        <!-- Presets -->
+        <div class="preset-section">
+          <label class="section-label">Historical Benchmark Case Studies:</label>
+          <div class="preset-buttons" id="presetButtonsContainer">
+            <!-- Populated dynamically by JS -->
+          </div>
+        </div>
+
+        <form id="seismicForm" class="seismic-form">
+          <!-- Magnitude -->
+          <div class="input-group">
+            <div class="label-row">
+              <label for="magnitudeInput">Magnitude (Mw / Richter):</label>
+              <span class="value-display" id="magValDisplay">8.1</span>
+            </div>
+            <input type="range" id="magnitudeSlider" min="6.0" max="9.5" step="0.1" value="8.1" class="slider">
+            <input type="number" id="magnitudeInput" min="6.0" max="10.0" step="any" value="8.1" class="num-input">
+          </div>
+
+          <!-- Hypocenter Depth -->
+          <div class="input-group">
+            <div class="label-row">
+              <label for="depthInput">Hypocenter Depth (km):</label>
+              <span class="value-display" id="depthValDisplay">18.0 km</span>
+            </div>
+            <input type="range" id="depthSlider" min="0" max="300" step="1" value="18" class="slider">
+            <input type="number" id="depthInput" min="0" max="800" step="any" value="18.0" class="num-input">
+          </div>
+
+          <!-- Coordinates Row -->
+          <div class="coords-row">
+            <div class="input-group half">
+              <label for="latitudeInput">Latitude (°):</label>
+              <input type="number" id="latitudeInput" min="-90" max="90" step="any" value="-15.489" class="num-input">
+            </div>
+            <div class="input-group half">
+              <label for="longitudeInput">Longitude (°):</label>
+              <input type="number" id="longitudeInput" min="-180" max="180" step="any" value="-172.095" class="num-input">
+            </div>
+          </div>
+
+          <button type="submit" id="evaluateBtn" class="btn-primary">
+            <span class="btn-icon">⚡</span> Evaluate Tsunami Risk
+          </button>
+        </form>
+      </section>
+
+      <!-- Center & Right: Map and Consensus Output -->
+      <section class="card map-card">
+        <div class="card-header">
+          <h2>Epicenter Geospatial Coordinates</h2>
+          <span class="instruction-hint">Click on map to position epicenter</span>
+        </div>
+        <div id="seismicMap" class="seismic-map"></div>
+      </section>
+
+      <!-- Full Width: Consensus Risk Alert Banner -->
+      <section class="alert-banner-container" id="consensusBannerContainer">
+        <div class="consensus-banner alert-critical" id="consensusBanner">
+          <div class="banner-icon-container" id="bannerIcon">🌊</div>
+          <div class="banner-content">
+            <div class="banner-tag" id="bannerRiskTier">CRITICAL TSUNAMI THREAT</div>
+            <h3 id="bannerTitle">HIGH TSUNAMI RISK - WARNING ISSUED</h3>
+            <p id="bannerDesc">High energy submarine event in subduction zone. Evacuation advisory recommended for coastal perimeters.</p>
+          </div>
+          <div class="banner-gauge">
+            <div class="gauge-label">Consensus Probability</div>
+            <div class="gauge-value" id="consensusProb">94.6%</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Multi-Model Prediction Cards -->
+      <section class="models-grid">
+        <!-- Random Forest Card (Champion) -->
+        <div class="card model-card champion-card">
+          <div class="champion-badge">🏆 Best Model (AUC 0.94)</div>
+          <div class="model-header">
+            <h3>Random Forest</h3>
+            <span class="model-type">Ensemble (T=100)</span>
+          </div>
+          <div class="prob-circle-container">
+            <div class="prob-circle" id="rfProbCircle" style="--prob: 94.6%;">
+              <span class="prob-text" id="rfProbText">94.6%</span>
+            </div>
+          </div>
+          <div class="verdict-row">
+            <span class="verdict-label">Prediction:</span>
+            <span class="verdict-badge verdict-tsunami" id="rfVerdict">TSUNAMI (1)</span>
+          </div>
+          <div class="model-details">
+            <p><strong>Theoretical Role:</strong> Captures non-linear geophysical interactions between depth, energy, and subduction coordinates.</p>
+          </div>
+        </div>
+
+        <!-- SVM Card -->
+        <div class="card model-card">
+          <div class="model-header">
+            <h3>Support Vector Machine</h3>
+            <span class="model-type">RBF Kernel</span>
+          </div>
+          <div class="prob-circle-container">
+            <div class="prob-circle" id="svmProbCircle" style="--prob: 89.8%;">
+              <span class="prob-text" id="svmProbText">89.8%</span>
+            </div>
+          </div>
+          <div class="verdict-row">
+            <span class="verdict-label">Prediction:</span>
+            <span class="verdict-badge verdict-tsunami" id="svmVerdict">TSUNAMI (1)</span>
+          </div>
+          <div class="model-details">
+            <p><strong>Theoretical Role:</strong> Maximizes separating margin in high-dimensional space with calibrated Platt probability scaling.</p>
+          </div>
+        </div>
+
+        <!-- Logistic Regression Card -->
+        <div class="card model-card">
+          <div class="model-header">
+            <h3>Logistic Regression</h3>
+            <span class="model-type">Linear Baseline</span>
+          </div>
+          <div class="prob-circle-container">
+            <div class="prob-circle" id="lrProbCircle" style="--prob: 99.9%;">
+              <span class="prob-text" id="lrProbText">99.9%</span>
+            </div>
+          </div>
+          <div class="verdict-row">
+            <span class="verdict-label">Prediction:</span>
+            <span class="verdict-badge verdict-tsunami" id="lrVerdict">TSUNAMI (1)</span>
+          </div>
+          <div class="model-details">
+            <p><strong>Theoretical Role:</strong> Interpretable linear odds estimator with ultra-fast computational inference (< 1ms).</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Scientific Research Benchmarks & Figures Section -->
+      <section class="card figures-card">
+        <div class="card-header">
+          <h2>IEEE Research Paper Replicated Artifacts & Benchmarks</h2>
+          <div class="tab-buttons">
+            <button class="tab-btn active" data-tab="metricsTab">Table 1: Metrics</button>
+            <button class="tab-btn" data-tab="rocTab">Fig 7: ROC Curves</button>
+            <button class="tab-btn" data-tab="featuresTab">Fig 8: Feature Importance</button>
+            <button class="tab-btn" data-tab="edaTab">Fig 1-3: Seismic EDA</button>
+            <button class="tab-btn" data-tab="cmTab">Fig 4-6: Confusion Matrices</button>
+          </div>
+        </div>
+
+        <div class="tab-contents">
+          <!-- Tab 1: Metrics Table -->
+          <div class="tab-pane active" id="metricsTab">
+            <table class="benchmark-table">
+              <thead>
+                <tr>
+                  <th>Classifier</th>
+                  <th>Accuracy</th>
+                  <th>Precision</th>
+                  <th>Recall (Sens.)</th>
+                  <th>F1-Score</th>
+                  <th>F2-Score</th>
+                  <th>ROC-AUC</th>
+                  <th>PR-AUC</th>
+                  <th>MCC</th>
+                </tr>
+              </thead>
+              <tbody id="benchmarkTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Tab 2: ROC Curves -->
+          <div class="tab-pane" id="rocTab">
+            <div class="figure-preview-container">
+              <img src="/reports/figures/fig7_roc_curves_comparison.png" alt="ROC Curves Comparison" class="research-fig">
+              <p class="fig-caption"><strong>Figure 7:</strong> Receiver Operating Characteristic (ROC) curves comparison for Logistic Regression, Random Forest, and Support Vector Machine on unseen test fold.</p>
+            </div>
+          </div>
+
+          <!-- Tab 3: Feature Importance -->
+          <div class="tab-pane" id="featuresTab">
+            <div class="figure-preview-container">
+              <img src="/reports/figures/fig8_rf_feature_importance.png" alt="Random Forest Feature Importance" class="research-fig">
+              <p class="fig-caption"><strong>Figure 8:</strong> Gini impurity feature contributions for the Random Forest model highlighting Magnitude (42%) and Coordinates as dominant early warning predictors.</p>
+            </div>
+          </div>
+
+          <!-- Tab 4: EDA -->
+          <div class="tab-pane" id="edaTab">
+            <div class="multi-fig-grid">
+              <div>
+                <img src="/reports/figures/fig1_magnitude_distribution.png" alt="Fig 1" class="research-fig">
+                <p class="fig-caption"><strong>Fig. 1:</strong> Magnitude distribution (USGS 2015-2025).</p>
+              </div>
+              <div>
+                <img src="/reports/figures/fig3_depth_distribution.png" alt="Fig 3" class="research-fig">
+                <p class="fig-caption"><strong>Fig. 3:</strong> Hypocenter depth distribution.</p>
+              </div>
+              <div>
+                <img src="/reports/figures/fig2_global_distribution.png" alt="Fig 2" class="research-fig">
+                <p class="fig-caption"><strong>Fig. 2:</strong> Global earthquake epicenter distribution.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 5: Confusion Matrices -->
+          <div class="tab-pane" id="cmTab">
+            <div class="multi-fig-grid">
+              <div>
+                <img src="/reports/figures/fig4_lr_confusion_matrix.png" alt="Fig 4" class="research-fig">
+                <p class="fig-caption"><strong>Fig. 4:</strong> Logistic Regression Confusion Matrix.</p>
+              </div>
+              <div>
+                <img src="/reports/figures/fig5_rf_confusion_matrix.png" alt="Fig 5" class="research-fig">
+                <p class="fig-caption"><strong>Fig. 5:</strong> Random Forest Confusion Matrix.</p>
+              </div>
+              <div>
+                <img src="/reports/figures/fig6_svm_confusion_matrix.png" alt="Fig 6" class="research-fig">
+                <p class="fig-caption"><strong>Fig. 6:</strong> SVM Confusion Matrix.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bottom-footer">
+      <p>AI-Driven Tsunami Early Warning System • Scientific Replication of IEEE JSTARS 2026 (Ziadi et al.) • Built with FastAPI, Scikit-Learn & Leaflet</p>
+    </footer>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>
